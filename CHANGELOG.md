@@ -1,3 +1,11 @@
+## 0.1.3
+
+- Refactored to a Pure API Client (removed high-level MikroTik-specific helpers from core).
+- Improved protocol robustness: fixed hanging issues by properly consuming trailing words and canceling iterators.
+- Added comprehensive timeout support for connection, command execution, and data reading.
+- Updated all examples to use the new `execute()` and `listen()` API.
+- Cleaned up Git history and project structure for a more mature release.
+
 ## 0.1.2
 
 - Shortened package description to meet pub.dev standards.
