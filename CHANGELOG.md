@@ -1,3 +1,9 @@
+## 0.1.1
+
+- Improved package documentation and examples.
+- Standardized example names for pub.dev compatibility.
+- Internal code cleanup and consistency fixes.
+
 ## 0.1.0
 
 - Initial release.
