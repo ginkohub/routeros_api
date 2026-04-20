@@ -1,15 +1,16 @@
 # RouterOS API for Dart
 
-A powerful, robust, and production-ready Dart package for communicating with MikroTik RouterOS devices via the native API protocol.
+A powerful, robust, and production-ready Pure API Client for communicating with MikroTik RouterOS devices via the native API protocol.
 
 ## Features
 
+- **Pure API Client**: Lightweight engine focused entirely on the MikroTik API protocol.
 - **Modern API Support**: Optimized for RouterOS 6.43+ (Post-6.43 login).
 - **Keep-Alive & Heartbeat**: Automatic background pings to prevent idle timeouts.
 - **Resilient**: Optional auto-reconnection on unexpected network failures.
 - **Timeouts**: Built-in timeout support for every operation (connection, command execution, and data reading).
 - **Real-time Streaming**: Support for persistent commands (like `monitor-traffic` or `torch`) using Dart Streams.
-- **Advanced Queries**: Convenient `execute()` method with support for `.proplist` and query syntax (`?`, `&`, `|`).
+- **Advanced Queries**: Flexible `execute()` method with support for `.proplist` and query syntax (`?`, `&`, `|`).
 - **Concurrency Safe**: Internal queue system to prevent command collisions on the same socket.
 - **Type Safe Exceptions**: Custom `RouterOSException` for structured error handling.
 - **Zero Dependencies**: Pure Dart implementation with no external package requirements.
@@ -41,7 +42,8 @@ void main() async {
 
   try {
     await client.connect();
-    final identity = await client.talk(['/system/identity/print']);
+    // Use execute() to send commands
+    final identity = await client.execute('/system/identity/print');
     print('Router Name: ${identity.first['name']}');
   } finally {
     client.close();
@@ -52,11 +54,11 @@ void main() async {
 ### 2. Advanced Execution (Filtering & Proplist)
 
 ```dart
-// Get only running ethernet interfaces with specific fields
+// Fetch only specific fields and filter by type
 final interfaces = await client.execute(
   '/interface/print',
   proplist: ['name', 'mac-address', 'running'],
-  queries: ['?type=ether', '?running=true', '?.and'],
+  queries: ['?type=ether'],
   timeout: Duration(seconds: 5),
 );
 ```
@@ -64,11 +66,12 @@ final interfaces = await client.execute(
 ### 3. Real-time Monitoring (Streaming)
 
 ```dart
+// Use listen() for commands that produce continuous output
 final trafficStream = client.listen(['/interface/monitor-traffic', '=interface=ether1']);
 
 await for (final update in trafficStream) {
   print('RX SPEED: ${update['rx-bits-per-second']} bps');
-  // Break the loop or call client.close() to stop
+  // Call client.close() or break the loop to stop listening
 }
 ```
 
@@ -84,10 +87,10 @@ await for (final update in trafficStream) {
 
 ## Examples
 
-Check the `example/` folder for more comprehensive use cases:
-- `quick_start.dart`: Basic connection and interface listing.
+Check the `example/` folder for comprehensive use cases:
+- `routeros_api_example.dart`: Basic connection and interface listing.
 - `live_monitor.dart`: Real-time bandwidth monitoring with formatting.
-- `network_dashboard.dart`: Aggregating data from DHCP and Hotspot modules.
+- `network_dashboard.dart`: Aggregating data from DHCP and Hotspot modules using `execute()`.
 - `error_handling_guide.dart`: Best practices for handling timeouts and router errors.
 
 ## License
