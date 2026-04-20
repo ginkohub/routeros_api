@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'package:routeros_api/routeros_api.dart';
 
-/// This example demonstrates the most basic operations:
-/// connecting, fetching identity, and listing interfaces.
 void main() async {
   final client = RouterOSClient(
     host: Platform.environment['MIKROTIK_HOST'] ?? '192.168.88.1',
@@ -14,13 +12,13 @@ void main() async {
     print('Connecting to RouterOS...');
     await client.connect();
 
-    // 1. Get System Identity using talk()
-    final identity = await client.talk(['/system/identity/print']);
+    // Get system identity
+    final identity = await client.execute('/system/identity/print');
     print('Router Identity: ${identity.first['name']}');
 
-    // 2. Get Interfaces using the helper method
+    // List interfaces using execute
     print('\nAvailable Interfaces:');
-    final interfaces = await client.getInterfaces();
+    final interfaces = await client.execute('/interface/print');
 
     for (final interface in interfaces) {
       final name = interface['name'];

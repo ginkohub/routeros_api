@@ -1,10 +1,6 @@
 import 'dart:io';
 import 'package:routeros_api/routeros_api.dart';
 
-/// This advanced example demonstrates data aggregation from multiple sources:
-/// 1. Fetching DHCP leases to get device hostnames.
-/// 2. Fetching Active Hotspot users.
-/// 3. Filtering and correlating the results into a unified view.
 void main() async {
   final client = RouterOSClient(
     host: Platform.environment['MIKROTIK_HOST'] ?? '192.168.88.1',
@@ -16,15 +12,15 @@ void main() async {
     await client.connect();
     print('--- NETWORK INSIGHTS DASHBOARD ---\n');
 
-    // Step A: Build a hostname map from DHCP Leases
-    final leases = await client.getDHCPLeases();
+    // Fetch DHCP Leases using execute
+    final leases = await client.execute('/ip/dhcp-server/lease/print');
     final ipToHost = {
       for (var l in leases)
         if (l['address'] != null)
           l['address']!: l['host-name'] ?? 'Generic Device'
     };
 
-    // Step B: Fetch active hotspot users using execute() with a proplist
+    // Fetch active hotspot users
     final activeUsers = await client.execute(
       '/ip/hotspot/active/print',
       proplist: ['.id', 'user', 'address', 'uptime', 'bytes-out'],
@@ -35,7 +31,6 @@ void main() async {
         '${'USER'.padRight(15)}${'HOSTNAME'.padRight(25)}${'DOWNLOAD'.padRight(15)}UPTIME');
     print('=' * 70);
 
-    // Sort by most bytes downloaded
     activeUsers.sort((a, b) {
       final bytesA = int.tryParse(a['bytes-out'] ?? '0') ?? 0;
       final bytesB = int.tryParse(b['bytes-out'] ?? '0') ?? 0;
@@ -49,6 +44,15 @@ void main() async {
       final uptime = user['uptime'] ?? '0s';
 
       print('$username$hostname$download$uptime');
+    }
+
+    // Fetch System Resource
+    print('\nSYSTEM INFO:');
+    final resources = await client.execute('/system/resource/print');
+    if (resources.isNotEmpty) {
+      final r = resources.first;
+      print('Board: ${r['board-name']} (${r['version']})');
+      print('CPU: ${r['cpu']} @ ${r['cpu-frequency']}MHz');
     }
   } catch (e) {
     print('Error loading dashboard: $e');

@@ -2,11 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:routeros_api/routeros_api.dart';
 
-/// This example demonstrates how to handle various failure scenarios:
-/// 1. Connection timeouts.
-/// 2. Authentication failures.
-/// 3. Invalid commands (Traps).
-/// 4. Operation timeouts.
 void main() async {
   final host = Platform.environment['MIKROTIK_HOST'] ?? '192.168.88.1';
   final user = Platform.environment['MIKROTIK_USER'] ?? 'admin';
@@ -43,7 +38,7 @@ void main() async {
   try {
     print('\n2. Testing invalid command (Trap)...');
     await clientTrap.connect();
-    await clientTrap.talk(['/ip/wrong/path/print']);
+    await clientTrap.execute('/ip/wrong/path/print');
   } on RouterOSException catch (e) {
     print('Caught Router Error: ${e.message}');
   } finally {
@@ -61,8 +56,9 @@ void main() async {
     print('\n3. Testing operation timeout (forcing 1ms timeout)...');
     await clientTimeout.connect();
 
-    // Attempt to get resources but with an impossibly short timeout
-    await clientTimeout.getSystemResource().timeout(const Duration(microseconds: 1));
+    // Using execute with an impossibly short timeout
+    await clientTimeout.execute('/system/resource/print',
+        timeout: const Duration(microseconds: 1));
   } on TimeoutException catch (_) {
     print('Caught expected TimeoutException! The operation took too long.');
   } catch (e) {

@@ -18,15 +18,31 @@ class RouterOSException implements Exception {
   String toString() => 'RouterOSException: $message';
 }
 
-/// A high-level client for communicating with MikroTik RouterOS devices.
+/// A high-level client for communicating with MikroTik RouterOS devices via the API protocol.
 class RouterOSClient {
+  /// The IP address or hostname of the router.
   final String host;
+
+  /// The API port (default is 8728).
   final int port;
+
+  /// The username for authentication.
   final String user;
+
+  /// The password for authentication.
   final String password;
+
+  /// Whether to use SSL/TLS for the connection.
   final bool useSsl;
+
+  /// Whether to automatically attempt reconnection when the connection is lost.
   final bool autoReconnect;
+
+  /// Interval at which to send heartbeat pings to keep the connection alive.
+  /// Set to [Duration.zero] to disable heartbeats.
   final Duration heartbeatInterval;
+
+  /// Default timeout for [talk] and [execute] operations.
   final Duration defaultTimeout;
 
   Socket? _socket;
@@ -49,8 +65,10 @@ class RouterOSClient {
     this.defaultTimeout = const Duration(seconds: 10),
   });
 
+  /// Returns true if the client is currently connected to the router.
   bool get isConnected => _connected && _socket != null;
 
+  /// Establishes a connection and performs authentication.
   Future<void> connect() async {
     if (_connected) {
       return;
@@ -129,7 +147,11 @@ class RouterOSClient {
     }
   }
 
-  /// Sends a command and waits for the full response.
+  /// Sends a command sentence and waits for the full response (!done).
+  ///
+  /// This method is suitable for commands that return a finite amount of data.
+  /// Throws [RouterOSException] if the router returns a !trap error.
+  /// Throws [TimeoutException] if the router does not respond within [timeout].
   Future<List<Map<String, String>>> talk(List<String> words,
       {Duration? timeout}) async {
     final effectiveTimeout = timeout ?? defaultTimeout;
@@ -171,6 +193,13 @@ class RouterOSClient {
     }
   }
 
+  /// Executes a command with structured parameters.
+  ///
+  /// [command] is the API path (e.g., '/interface/print').
+  /// [params] are key-value pairs for command parameters.
+  /// [proplist] defines which fields to return (e.g., ['name', 'mtu']).
+  /// [queries] are API query words for filtering (e.g., ['?type=ether']).
+  /// [timeout] overrides the [defaultTimeout].
   Future<List<Map<String, String>>> execute(String command,
       {Map<String, String>? params,
       List<String>? proplist,
@@ -189,6 +218,10 @@ class RouterOSClient {
     return await talk(words, timeout: timeout);
   }
 
+  /// Listens for a continuous stream of data from a persistent command.
+  ///
+  /// Useful for commands like '/interface/monitor-traffic' or '/tool/torch'.
+  /// Throws [RouterOSException] if the router returns a !trap error.
   Stream<Map<String, String>> listen(List<String> words) async* {
     if (!_connected || _socket == null) {
       await connect();
@@ -375,33 +408,5 @@ class RouterOSClient {
     _socket?.destroy();
     _socket = null;
     _connected = false;
-  }
-
-  // --- Helper Methods ---
-
-  /// Retrieves all network interfaces.
-  Future<List<Map<String, String>>> getInterfaces() =>
-      execute('/interface/print');
-
-  /// Retrieves active hotspot users.
-  Future<List<Map<String, String>>> getHotspotActiveUsers() =>
-      execute('/ip/hotspot/active/print');
-
-  /// Retrieves traffic stats for a specific interface.
-  Future<List<Map<String, String>>> getInterfaceTraffic(String interface) =>
-      execute('/interface/monitor-traffic',
-          params: {'interface': interface, 'once': ''});
-
-  /// Retrieves the ARP table.
-  Future<List<Map<String, String>>> getArpTable() => execute('/ip/arp/print');
-
-  /// Retrieves all DHCP leases.
-  Future<List<Map<String, String>>> getDHCPLeases() =>
-      execute('/ip/dhcp-server/lease/print');
-
-  /// Retrieves system resources.
-  Future<Map<String, String>> getSystemResource() async {
-    final response = await execute('/system/resource/print');
-    return response.isNotEmpty ? response.first : {};
   }
 }
