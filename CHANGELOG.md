@@ -1,3 +1,8 @@
+## 0.1.2
+
+- Shortened package description to meet pub.dev standards.
+- Updated metadata for better search engine optimization.
+
 ## 0.1.1
 
 - Improved package documentation and examples.

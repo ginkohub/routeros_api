@@ -1,6 +1,6 @@
 name: routeros_api
-description: A powerful and robust Dart package for communicating with MikroTik RouterOS via its native API. Supports persistent connections, heartbeats, auto-reconnect, and real-time streaming.
-version: 0.1.1
+description: A robust Dart package for MikroTik RouterOS API. Supports persistent connections, heartbeats, auto-reconnect, and real-time streaming.
+version: 0.1.2
 repository: https://github.com/ginkohub/routeros_api
 homepage: https://github.com/ginkohub/routeros_api
 issue_tracker: https://github.com/ginkohub/routeros_api/issues
