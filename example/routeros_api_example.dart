@@ -26,6 +26,21 @@ void main() async {
       final status = (interface['running'] == 'true') ? 'UP' : 'DOWN';
       print(' - $name ($type) is $status');
     }
+
+    print('\nHotspot Users Active:');
+    // Using execute with countOnly: true (supports ROS 6.43+)
+    final activeResults = await client
+        .execute('/ip/hotspot/active/print', flags: ["=count-only="]);
+
+    // Some versions of RouterOS return 'count', others return 'ret'
+    final total =
+        activeResults.first['count'] ?? activeResults.first['ret'] ?? '0';
+    print('Execute: $total');
+
+    // Or using talk with the raw parameter
+    final rawCount =
+        await client.talk(['/ip/hotspot/active/print', '=count-only=']);
+    print('Talk: ${rawCount.first["ret"]}');
   } on RouterOSException catch (e) {
     print('RouterOS Error: ${e.message}');
   } catch (e) {

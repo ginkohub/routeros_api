@@ -204,8 +204,14 @@ class RouterOSClient {
       {Map<String, String>? params,
       List<String>? proplist,
       List<String>? queries,
+      List<String>? flags,
       Duration? timeout}) async {
     final List<String> words = [command];
+    if (flags != null && flags.isNotEmpty) {
+      for (final flag in flags) {
+        words.add(flag);
+      }
+    }
     if (proplist != null && proplist.isNotEmpty) {
       words.add('=.proplist=${proplist.join(',')}');
     }
@@ -237,15 +243,20 @@ class RouterOSClient {
       final word = await _readWord();
       if (word.isEmpty) {
         if (currentReply.isNotEmpty) {
+          bool doneSeen = currentReply.containsKey('!done');
           yield currentReply;
           currentReply = {};
+          if (doneSeen) break;
         }
         continue;
       }
 
       if (word == '!done') {
-        await _readWord();
-        break;
+        if (currentReply.isNotEmpty) {
+          yield currentReply;
+          currentReply = {};
+        }
+        currentReply['!done'] = 'true';
       } else if (word == '!re' || word == '!trap') {
         if (currentReply.isNotEmpty) {
           if (currentReply.containsKey('!trap')) {
@@ -308,13 +319,16 @@ class RouterOSClient {
   Future<List<Map<String, String>>> _readSentence() async {
     final List<Map<String, String>> results = [];
     Map<String, String> currentReply = {};
+    bool doneSeen = false;
 
     while (true) {
       final word = await _readWord();
       if (word.isEmpty) {
         if (currentReply.isNotEmpty) {
+          doneSeen = currentReply.containsKey('!done');
           results.add(currentReply);
           currentReply = {};
+          if (doneSeen) break;
         } else {
           break;
         }
@@ -322,9 +336,11 @@ class RouterOSClient {
       }
 
       if (word == '!done') {
-        results.add({'!done': 'true'});
-        await _readWord();
-        break;
+        if (currentReply.isNotEmpty) {
+          results.add(currentReply);
+          currentReply = {};
+        }
+        currentReply['!done'] = 'true';
       } else if (word == '!re') {
         if (currentReply.isNotEmpty) {
           results.add(currentReply);
@@ -336,6 +352,10 @@ class RouterOSClient {
         final value = parts.length > 1 ? parts.sublist(1).join('=') : '';
         currentReply[key] = value;
       } else if (word == '!trap') {
+        if (currentReply.isNotEmpty) {
+          results.add(currentReply);
+          currentReply = {};
+        }
         currentReply['!trap'] = 'true';
       } else if (word == '!fatal') {
         _connected = false;

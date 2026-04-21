@@ -54,11 +54,12 @@ void main() async {
 ### 2. Advanced Execution (Filtering & Proplist)
 
 ```dart
-// Fetch only specific fields and filter by type
+// Fetch only specific fields, filter by type, and use flags
 final interfaces = await client.execute(
   '/interface/print',
   proplist: ['name', 'mac-address', 'running'],
   queries: ['?type=ether'],
+  flags: ['=count-only='],
   timeout: Duration(seconds: 5),
 );
 ```

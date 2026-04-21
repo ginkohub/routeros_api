@@ -1,3 +1,9 @@
+## 0.1.4
+
+- Fixed a critical bug where parameters in `!done` sentences (like `count` or `ret`) were ignored and could cause timeouts.
+- Added support for generic `flags` in the `execute()` method.
+- Improved documentation and examples for `count-only` usage.
+
 ## 0.1.3
 
 - Refactored to a Pure API Client (removed high-level MikroTik-specific helpers from core).
